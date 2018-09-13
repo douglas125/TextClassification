@@ -6,6 +6,12 @@ from tqdm import tqdm
 import requests
 import math
 
+
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.svm import SVC
+import scipy.stats
+
 """
 NILC word embeddings
 
@@ -138,3 +144,57 @@ class WordEmbeddingBR:
         distances = sorted(distances, key=lambda k: 1-k['d']) 
         ans = [ {x['word'] : x['d']} for x in distances ]
         return ans[0:topN]
+    
+    def getSentenceVector(self, x):
+        wordArray = splitWithPunctuation(x)
+        ans = np.zeros( (self.maxlen, self.embDim) )
+        for i,w in enumerate(wordArray):
+            if len(w) > 2:
+                ans[i] = self.encodeWord(w.lower())
+                ans[i] /= (np.linalg.norm(ans[i])+1e-4)
+        return np.sum(ans,axis=0)
+        
+    def TestBaselineClassifiers(self, X_test, y_test, classifiers):
+        ans = {}
+        vectTexts_test = [self.getSentenceVector(x).reshape((-1,)) for x in X_test]
+        for c in classifiers:
+            ans[c] = classifiers[c].best_estimator_.score(vectTexts_test, y_test)
+        return ans
+    
+    def TrainBaselineClassifiers(self, X_train, y_train, n_iter=10):
+        """
+        Tests a set of baseline classifiers using cross-validation on X_train, y_train. 
+        Returns scikit learn CrossValidation objects
+        
+        X_train - strings containing the texts to be classified
+        y_train - desired labels
+        """
+        ans={}
+        
+        self.maxlen = max([len(x) for x in X_train])
+        vectTexts_train = [self.getSentenceVector(x).reshape((-1,)) for x in X_train]
+        
+        print('Fitting Support Vector Machine...')
+        svmParams = { #'verbose' : [1],
+             'gamma': scipy.stats.uniform(0.005,0.15),#[0.1,0.01,0.02,0.04,0.08],  
+             'C' : scipy.stats.uniform(0.01,50),#[0.1,10,15, 20,25,40], 
+             'shrinking'    :[True, False]}
+        sksvc = SVC(verbose=1, gamma=0.1, tol=1e-5, C=2, kernel='rbf')
+        svmRSCV = RandomizedSearchCV(sksvc, svmParams, verbose=1, return_train_score=True, n_iter=2*n_iter) #, n_jobs=-1)
+        svmRSCV.fit(vectTexts_train, y_train)
+        
+        ans['SVM'] = svmRSCV
+        
+        print('Fitting Gradient Boosted Tree...')        
+        gbParams = { #'verbose' : [1],
+             'learning_rate': scipy.stats.uniform(0.005,0.5),  
+             'n_estimators' : scipy.stats.randint(50, 501), 
+             'max_depth'    : scipy.stats.randint(3, 10)}
+        gbc = GradientBoostingClassifier(verbose=1, learning_rate=0.1, n_estimators=320, max_depth=6)
+        gbRSCV = RandomizedSearchCV(gbc, gbParams, verbose=1, return_train_score=True, n_iter=n_iter) #, n_jobs=-1)
+        gbRSCV.fit(vectTexts_train, y_train)
+        ans['GradientBoostingClassifier'] = gbRSCV
+        
+        #self.baselineClassifiers = ans
+        
+        return ans
