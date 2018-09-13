@@ -53,16 +53,20 @@ def _downloadFile(url, filename):
 
 
 class WordEmbeddingBR:
-    def downloadNILCEmbeddings():
+    def downloadNILCEmbeddings(mode='50'):
         """
         Downloads some of the NILC embeddings to the 'embedding' folder
         """
+        avModes = ['50', '100', '300', '600', '1000']
+        assert mode in avModes, 'Mode has to be one of the available embedding sizes: {}'.format(avModes)
+        
+        baseURL = 'http://143.107.183.175:22980/download.php?file=embeddings'
         print('Downloading NILC word embeddings. More available at http://nilc.icmc.usp.br/embeddings')        
         NILCfiles = {
-                        'glove50' : 'http://143.107.183.175:22980/download.php?file=embeddings/glove/glove_s50.zip',
-                        'cbow50_wang2vec' : 'http://143.107.183.175:22980/download.php?file=embeddings/wang2vec/cbow_s50.zip',
-                        'cbow50_fasttext' : 'http://143.107.183.175:22980/download.php?file=embeddings/fasttext/cbow_s50.zip',
-                        'skip50_word2vec' : 'http://143.107.183.175:22980/download.php?file=embeddings/word2vec/skip_s50.zip'
+                        'glove{}'.format(mode) : baseURL + '/glove/glove_s{}.zip'.format(mode),
+                        'cbow{}_wang2vec'.format(mode) :  baseURL +'/wang2vec/cbow_s{}.zip'.format(mode),
+                        'cbow{}_fasttext'.format(mode) :  baseURL +'/fasttext/cbow_s{}.zip'.format(mode),
+                        'skip{}_word2vec'.format(mode) :  baseURL +'/word2vec/skip_s{}.zip'.format(mode)
                     }
         
         if not os.path.exists('embedding/'):
