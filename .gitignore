@@ -1,5 +1,6 @@
 *.zip
 *.png
+*.h5
 docs/
 __pycache__/
 .ipynb_checkpoints/
