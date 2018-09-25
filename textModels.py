@@ -161,7 +161,7 @@ def createAttLayer( val_dim = 60, key_dim = 41, query_dim = 30, nHeads = 3, proj
     #compute attention
     attScores = Dot([2,2])([q,keys])
     attWeights = Softmax(name='attW')(attScores)
-    attWeights = BatchNormalization(axis=1)(attWeights)
+    #attWeights = BatchNormalization(axis=1)(attWeights)
     
     wAvg = Dot([2,1])([attWeights, vals])
     model = Model(inputs=[vals, keys, query], outputs=[wAvg, attWeights], name='AttLayer_{}h'.format(nHeads))
