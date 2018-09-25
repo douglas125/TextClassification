@@ -70,7 +70,7 @@ def sentence2code(sentence, vocabulary, embClass = None):
 from sklearn import preprocessing
 
 #change LSTM to CuDNNLSTM
-from keras.layers import CuDNNLSTM #, LSTM
+from keras.layers import CuDNNLSTM, LSTM
 from keras.layers import Reshape, Dot, Softmax, Flatten, BatchNormalization, Dropout
 from keras.layers import Input, Embedding, Conv2D, Lambda, Concatenate, Bidirectional, TimeDistributed, Dense
 from keras.models import Model, load_model
@@ -92,7 +92,7 @@ def createCharEncoder(charDictSize, embSize, nFiltersNGram=16, filterSize = 5):
     ngram = Conv2D(1, kernel_size = (filterSize,1), padding='same', activation=None)(ngram)
     
     ngram = Lambda(lambda x: K.squeeze(x, axis=3))(ngram)
-    ngram = Bidirectional(CuDNNLSTM(embSize//2))(ngram)
+    ngram = Bidirectional(LSTM(embSize//2))(ngram)
     
     output = ngram
     
@@ -187,10 +187,10 @@ def createBiDirAttModel(charDictSize, dictSize, nHeads = 3,
                                        wordfilterSize, preTrainedEmbDim)(inputWords)
         
     combinedEncodings = Concatenate()([wordEncoded, charFeats])
-    enc_memory = Bidirectional(CuDNNLSTM(wordEmbSize//2, return_sequences=True))(combinedEncodings)
+    enc_memory = Bidirectional(LSTM(wordEmbSize//2, return_sequences=True))(combinedEncodings)
 
     if modelType == 'classifier':
-        q = CuDNNLSTM(wordEmbSize, return_sequences=False)(enc_memory)
+        q = LSTM(wordEmbSize, return_sequences=False)(enc_memory)
         
         attLayer = createAttLayer( val_dim = wordEmbSize, key_dim = wordEmbSize, query_dim = wordEmbSize, 
                                    nHeads = nHeads, projActivation=None )
@@ -223,7 +223,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateSchedule
 def step_decay(epoch):
     initial_lrate = 0.001                
     drop = 0.6
-    epochs_drop = 10.0
+    epochs_drop = 20.0
     lrate = initial_lrate * math.pow(drop,  
             math.floor((1+epoch)/epochs_drop))
     

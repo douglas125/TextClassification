@@ -176,7 +176,7 @@ class WordEmbeddingBR:
         
         print('Fitting Support Vector Machine...')
         svmParams = { #'verbose' : [1],
-             'gamma': scipy.stats.uniform(0.005,0.15),#[0.1,0.01,0.02,0.04,0.08],  
+             'gamma': scipy.stats.uniform(0.0015,0.515),#[0.1,0.01,0.02,0.04,0.08],  
              'C' : scipy.stats.uniform(0.01,50),#[0.1,10,15, 20,25,40], 
              'shrinking'    :[True, False]}
         sksvc = SVC(verbose=1, gamma=0.1, tol=1e-5, C=2, kernel='rbf')
@@ -187,9 +187,9 @@ class WordEmbeddingBR:
         
         print('Fitting Gradient Boosted Tree...')        
         gbParams = { #'verbose' : [1],
-             'learning_rate': scipy.stats.uniform(0.005,0.5),  
-             'n_estimators' : scipy.stats.randint(50, 501), 
-             'max_depth'    : scipy.stats.randint(3, 10)}
+             'learning_rate': scipy.stats.uniform(0.005,0.85),  
+             'n_estimators' : scipy.stats.randint(50, 851), 
+             'max_depth'    : scipy.stats.randint(2, 20)}
         gbc = GradientBoostingClassifier(verbose=1, learning_rate=0.1, n_estimators=320, max_depth=6)
         gbRSCV = RandomizedSearchCV(gbc, gbParams, verbose=1, return_train_score=True, n_iter=n_iter) #, n_jobs=-1)
         gbRSCV.fit(vectTexts_train, y_train)
