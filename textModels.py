@@ -160,8 +160,8 @@ def createAttLayer( val_dim = 60, key_dim = 41, query_dim = 30, nHeads = 3, proj
     
     #compute attention
     attScores = Dot([2,2])([q,keys])
+    attScores = BatchNormalization(axis=1)(attScores)
     attWeights = Softmax(name='attW')(attScores)
-    #attWeights = BatchNormalization(axis=1)(attWeights)
     
     wAvg = Dot([2,1])([attWeights, vals])
     model = Model(inputs=[vals, keys, query], outputs=[wAvg, attWeights], name='AttLayer_{}h'.format(nHeads))
@@ -236,7 +236,7 @@ def step_decay(epoch):
 class BiDirAttModelClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, nClasses, charDictSize=len(allchars)+2, dictSize = 10000, preTrainedEmbeddings = None, nHeads = 3,
-                 modelFileName='model-text.h5', patience = 40, epochs = 100, val_split = 0.15,
+                 modelFileName='model-text.h5', patience = 25, epochs = 100, val_split = 0.15,
                  charEmbSize=16, nFiltersNGram=8, charfilterSize = 4, #character params
                  wordEmbSize=128, nFiltersWordGram = 8, wordfilterSize = 4): #word params
         """

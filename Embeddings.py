@@ -1,7 +1,6 @@
 import os
 import zipfile
 import numpy as np
-from tqdm import tqdm
 
 import requests
 import math
@@ -43,6 +42,7 @@ def splitWithPunctuation(text):
     return re.findall(r"[\w']+|[.,!?:;\"]", text)
 
 def _downloadFile(url, filename):
+    from tqdm import tqdm
     # Streaming, so we can iterate over the response.
     r = requests.get(url, stream=True)
 
@@ -111,7 +111,7 @@ class WordEmbeddingBR:
         with zipfile.ZipFile(os.path.join('embedding', sourceFile), "r") as z:
             embFile = z.namelist()[0]
             with z.open(embFile, "r") as f: #, encoding="utf8"
-                  for line in tqdm(f):
+                  for line in f: #tqdm(f):
                         line=line.decode("utf-8")
                         lineSplit = line.split(' ')
                         if len(lineSplit) > 2:
